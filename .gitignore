@@ -1,0 +1,38 @@
+# Node.js
+node_modules/
+dist/
+
+# Java / Maven
+target/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Secrets and credentials
+*.secret
+secrets/
+credentials/
+*.credentials
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+
+# Cloud credentials
+.aws/
+.azure/
+.gcloud/
+
+# Logs and IDE files
+*.log
+.idea/
+.vscode/
+
+# Operating system files
+.DS_Store
+Thumbs.db
