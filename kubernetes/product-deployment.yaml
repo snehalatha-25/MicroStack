@@ -1,13 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
-metadata: { name: product-service }
+metadata:
+  name: product-service
 spec:
   replicas: 2
-  selector: { matchLabels: { app: product-service } }
+  selector:
+    matchLabels:
+      app: product-service
   template:
-    metadata: { labels: { app: product-service } }
+    metadata:
+      labels:
+        app: product-service
     spec:
       containers:
         - name: product-service
-          image: YOUR_DOCKERHUB_USERNAME/microstack-product:1.0
-          ports: [{ containerPort: 8081 }]
+          image: docker-product-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080

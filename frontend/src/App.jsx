@@ -6,13 +6,47 @@ import {
 } from 'lucide-react'
 import './styles.css'
 
-const API_URL = 'http://localhost:8081/api/products'
-const CART_API_URL = 'http://localhost:8082/api/cart'
-
+const API_URL = '/api/products'
+const CART_API_URL = '/api/cart'
+const ORDER_API_URL = '/api/orders'
 const productImages = {
+  // Electronics
   1: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=85',
+  4: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=900&q=85',
+  5: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85',
+  6: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=900&q=85',
+  7: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=900&q=85',
+  8: 'https://images.unsplash.com/photo-1527814050087-3793815479db?auto=format&fit=crop&w=900&q=85',
+  9: 'https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?auto=format&fit=crop&w=900&q=85',
+  10: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?auto=format&fit=crop&w=900&q=85',
+
+  // Fashion
+  11: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85',
+  12: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?auto=format&fit=crop&w=900&q=85',
+  13: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=85',
+  14: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=900&q=85',
+  15: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=900&q=85',
+  16: 'https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=900&q=85',
+  17: 'https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=900&q=85',
+
+  // Home
+  3: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=85',
+  18: 'https://images.unsplash.com/photo-1577937927133-66ef06acdf18?auto=format&fit=crop&w=900&q=85',
+  19: 'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?auto=format&fit=crop&w=900&q=85',
+  20: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=900&q=85',
+  21: 'https://images.unsplash.com/photo-1563861826100-9a?auto=format&fit=crop&w=900&q=85',
+  22: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=900&q=85',
+  23: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=900&q=85',
+  24: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=900&q=85',
+
+  // Accessories
   2: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=85',
-  3: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=85'
+  25: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=900&q=85',
+  26: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=900&q=85',
+  27: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=900&q=85',
+  28: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=900&q=85',
+  29: 'https://images.unsplash.com/photo-1523726491678-bf852e717f6a?auto=format&fit=crop&w=900&q=85',
+  30: 'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?auto=format&fit=crop&w=900&q=85'
 }
 
 const categories = ['All', 'Electronics', 'Fashion', 'Home', 'Accessories']
@@ -34,8 +68,14 @@ export default function App() {
   const [sort, setSort] = useState('featured')
   const [cartOpen, setCartOpen] = useState(false)
   const [notice, setNotice] = useState('')
-  const [orderPlaced, setOrderPlaced] = useState(false)
-
+  const [customerName, setCustomerName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [deliveryAddress, setDeliveryAddress] = useState('')
+  const [orders, setOrders] = useState([])
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [currentView, setCurrentView] = useState('shop')
+  const [orderLoading, setOrderLoading] = useState(false)
+  const [orderError, setOrderError] = useState('')
   // Fetch products from Java Product Service
   useEffect(() => {
     let active = true
@@ -188,10 +228,16 @@ export default function App() {
 
   const count = cart.reduce((sum, item) => sum + item.qty, 0)
 
-  const subtotal = cart.reduce(
-    (sum, item) => sum + item.price * item.qty,
-    0
-  )
+const subtotal = cart.reduce(
+  (sum, item) => sum + item.price * item.qty,
+  0
+)
+
+// Delivery charge calculation
+const deliveryCharge = subtotal >= 1000 ? 0 : 50
+
+// Final amount customer needs to pay
+const total = subtotal + deliveryCharge
 
   // Display notification
   const showNotice = message => {
@@ -230,7 +276,6 @@ export default function App() {
 
       await refreshCart()
 
-      setOrderPlaced(false)
       showNotice(`${product.name} added to cart`)
     } catch (err) {
       setCartError('Could not add product. Please try again.')
@@ -300,45 +345,151 @@ export default function App() {
     }
   }
 
-  // Demo checkout: clear backend cart, but do not create a real order
+  // Create an order first, then clear the cart only after success
   const checkout = async () => {
-    if (!cart.length || cartBusy) return
+    if (!cart.length || cartBusy || orderLoading) return
+
+    if (!customerName.trim() || !phone.trim() || !deliveryAddress.trim()) {
+      setOrderError('Please enter your name, phone number and delivery address.')
+      return
+    }
+if (!/^\d{10}$/.test(phone.trim())) {
+      setOrderError('Please enter a valid 10-digit phone number.')
+      return
+    }
 
     try {
-      setCartBusy(true)
+      setOrderLoading(true)
+      setOrderError('')
       setCartError('')
 
-      for (const item of cart) {
-        const response = await fetch(`${CART_API_URL}/${item.id}`, {
-          method: 'DELETE'
-        })
-
-        if (!response.ok) {
-          throw new Error('Unable to clear cart')
-        }
+      const orderData = {
+        customerName: customerName.trim(),
+        phone: phone.trim(),
+        deliveryAddress: deliveryAddress.trim(),
+        items: cart.map(item => ({
+          productId: item.id,
+          productName: item.name,
+          quantity: item.qty,
+          unitPrice: item.price,
+          image: item.image,
+          category: item.category
+        }))
       }
 
-      await refreshCart()
+      const response = await fetch(ORDER_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      })
 
-      setOrderPlaced(true)
-      showNotice('Demo order placed successfully')
+      if (!response.ok) {
+        throw new Error('Order creation failed')
+      }
+
+      const createdOrder = await response.json()
+
+      setSelectedOrder(createdOrder)
+      setOrders(previous => [createdOrder, ...previous])
+      setCurrentView('confirmation')
+      setCartOpen(false)
+
+      // Do not delete cart items until the order exists successfully.
+      try {
+        await Promise.all(
+          cart.map(item =>
+            fetch(`${CART_API_URL}/${item.id}`, {
+              method: 'DELETE'
+            }).then(deleteResponse => {
+              if (!deleteResponse.ok) {
+                throw new Error('Cart cleanup failed')
+              }
+            })
+          )
+        )
+        await refreshCart()
+      } catch (cleanupError) {
+        setCartError('Your order was created, but the cart could not be completely cleared.')
+      }
+
+      showNotice('Your order has been placed successfully')
     } catch (err) {
-      setCartError('Checkout could not be completed. Please try again.')
-      await refreshCart().catch(() => {})
+      setOrderError('Unable to place your order. Please try again.')
     } finally {
-      setCartBusy(false)
+      setOrderLoading(false)
+    }
+  }
+
+  // Load orders stored by the Order Service for this runtime
+  const openOrders = async () => {
+    setCurrentView('orders')
+    setOrderError('')
+
+    try {
+      const response = await fetch(ORDER_API_URL)
+      if (!response.ok) throw new Error('Unable to load orders')
+      const data = await response.json()
+      setOrders(Array.isArray(data) ? data.reverse() : [])
+    } catch (err) {
+      setOrderError('Unable to load orders. Please check that Order Service is running.')
+    }
+  }
+
+  const openTracking = async orderId => {
+    try {
+      setOrderError('')
+      const response = await fetch(`${ORDER_API_URL}/${orderId}`)
+      if (!response.ok) throw new Error('Unable to load order')
+      const data = await response.json()
+      setSelectedOrder(data)
+      setCurrentView('tracking')
+    } catch (err) {
+      setOrderError('Unable to load tracking details.')
+    }
+  }
+
+  // Demo-only manual tracking progression; no courier integration
+  const advanceTracking = async () => {
+    if (!selectedOrder || selectedOrder.status === 'DELIVERED' || orderLoading) return
+
+    const stages = ['PLACED', 'CONFIRMED', 'PACKED', 'SHIPPED', 'DELIVERED']
+    const nextStatus = stages[stages.indexOf(selectedOrder.status) + 1]
+    if (!nextStatus) return
+
+    try {
+      setOrderLoading(true)
+      const response = await fetch(`${ORDER_API_URL}/${selectedOrder.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus })
+      })
+      if (!response.ok) throw new Error('Unable to update tracking')
+
+      const updatedOrder = await response.json()
+      setSelectedOrder(updatedOrder)
+      setOrders(previous => previous.map(order =>
+        order.id === updatedOrder.id ? updatedOrder : order
+      ))
+      showNotice(`Demo status updated to ${nextStatus}`)
+    } catch (err) {
+      setOrderError('Unable to update demo tracking status.')
+    } finally {
+      setOrderLoading(false)
     }
   }
 
   return (
     <div className="site-shell">
 
-      <div className="announcement">
-        THOUGHTFUL FINDS FOR EVERYDAY LIVING
-        <span>•</span>
-        DISCOVER THE MICROSTACK EDIT
+      {/* Top information bar */}
+      <div className="utility-bar">
+        <div className="container utility-inner">
+          <span>Welcome to MicroStack — Everyday shopping, made simple</span>
+          <span>Customer Support | Help Centre</span>
+        </div>
       </div>
 
+      {/* Main header */}
       <header className="header container">
         <a className="logo" href="#top" aria-label="MicroStack home">
           <span className="logo-mark">M</span>
@@ -347,26 +498,60 @@ export default function App() {
           </span>
         </a>
 
-        <nav className="main-nav">
-          <a href="#shop">Shop</a>
-          <a href="#categories">Categories</a>
-          <a href="#about">About</a>
-        </nav>
+        <label className="header-search">
+          <Search size={19} />
 
-        <div className="header-actions">
-          <button
-            className="cart-trigger"
-            onClick={() => setCartOpen(true)}
-          >
-            <ShoppingBag size={18} />
-            <span>Cart</span>
-            <b>{count}</b>
-          </button>
-        </div>
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search for products, brands and more..."
+            aria-label="Search products"
+          />
+
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              aria-label="Clear search"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </label>
+
+        <button
+          className="my-orders-trigger"
+          onClick={openOrders}
+        >
+          My Orders
+        </button>
+
+        <button
+          className="cart-trigger"
+          onClick={() => setCartOpen(true)}
+        >
+          <ShoppingBag size={19} />
+          <span>My Cart</span>
+          <b>{count}</b>
+        </button>
       </header>
 
-      <main id="top">
+      {/* Category navigation */}
+      <nav className="red-navigation">
+        <div className="container red-navigation-inner">
+          <a href="#categories">All Categories</a>
+          <a href="#shop">Electronics</a>
+          <a href="#shop">Fashion</a>
+          <a href="#shop">Home & Living</a>
+          <a href="#shop">Accessories</a>
+          <a href="#about">About Us</a>
+        </div>
+      </nav>
 
+      <main id="top">
+        {currentView === 'shop' ? (
+          <>
+
+        {/* Hero banner */}
         <section className="hero container">
           <div className="hero-copy">
             <span className="eyebrow">THE EVERYDAY COLLECTION</span>
@@ -396,6 +581,7 @@ export default function App() {
               src="https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=1200&q=85"
               alt="Everyday home essentials"
             />
+
             <div className="hero-photo-label">
               <small>THE MICROSTACK EDIT</small>
               <strong>Everyday,<br />elevated.</strong>
@@ -403,6 +589,7 @@ export default function App() {
           </div>
         </section>
 
+        {/* Service highlights */}
         <section className="trust-strip container">
           <div>
             <Truck />
@@ -429,6 +616,7 @@ export default function App() {
           </div>
         </section>
 
+        {/* Product catalogue */}
         <section className="shop-section container" id="shop">
 
           <div className="section-heading">
@@ -554,6 +742,7 @@ export default function App() {
               <p>
                 Try another search term or choose a different category.
               </p>
+
               <button
                 onClick={() => {
                   setQuery('')
@@ -567,6 +756,7 @@ export default function App() {
 
         </section>
 
+        {/* About section */}
         <section className="about-section container" id="about">
           <div className="about-image">
             <img
@@ -596,8 +786,151 @@ export default function App() {
           </div>
         </section>
 
+
+          </>
+        ) : currentView === 'confirmation' && selectedOrder ? (
+          <section className="order-page container">
+            <div className="order-page-heading">
+              <span className="eyebrow">ORDER CONFIRMED</span>
+              <h1><Check size={25} /> Thank you for your order!</h1>
+              <p>Your order has been created successfully in MicroStack.</p>
+            </div>
+
+            <div className="order-panel">
+              <div className="order-panel-heading">
+                <div>
+                  <small>ORDER ID</small>
+                  <h2>#{selectedOrder.id}</h2>
+                </div>
+                <div>
+                  <small>ORDER DATE</small>
+                  <b>{new Date(selectedOrder.orderDate).toLocaleString('en-IN')}</b>
+                </div>
+              </div>
+
+              <h3>Items ordered</h3>
+              {(selectedOrder.items || []).map((item, index) => (
+                <div className="order-item" key={`${item.productId}-${index}`}>
+                  <img src={item.image || productImages[item.productId] || productImages[1]} alt={item.productName} />
+                  <div>
+                    <b>{item.productName}</b>
+                    <small>Qty: {item.quantity} × {money(item.unitPrice)}</small>
+                  </div>
+                  <strong>{money(item.lineTotal)}</strong>
+                </div>
+              ))}
+
+              <div className="order-address">
+                <h3>Delivery address</h3>
+                <p>{selectedOrder.customerName}</p>
+                <p>{selectedOrder.phone}</p>
+                <p>{selectedOrder.deliveryAddress}</p>
+              </div>
+
+              <div className="order-total-lines">
+                <div><span>Subtotal</span><b>{money(selectedOrder.subtotal)}</b></div>
+                <div><span>Delivery</span><b>{Number(selectedOrder.deliveryCharge) === 0 ? 'FREE' : money(selectedOrder.deliveryCharge)}</b></div>
+                <div className="order-grand-total"><span>Order total</span><b>{money(selectedOrder.total)}</b></div>
+              </div>
+
+              <div className="order-actions">
+                <button className="checkout-button" onClick={() => openTracking(selectedOrder.id)}>
+                  Track this order <ArrowRight size={17} />
+                </button>
+                <button className="secondary-action" onClick={openOrders}>View my orders</button>
+                <button className="secondary-action" onClick={() => setCurrentView('shop')}>Continue shopping</button>
+              </div>
+              <p className="demo-disclaimer">Academic demo: no payment was collected and no real courier is connected.</p>
+            </div>
+          </section>
+        ) : currentView === 'orders' ? (
+          <section className="order-page container">
+            <div className="order-page-heading">
+              <span className="eyebrow">YOUR ACCOUNT</span>
+              <h1>My Orders</h1>
+              <p>Orders currently held by the running Order Service.</p>
+            </div>
+
+            {orderError && <div className="order-message">{orderError}</div>}
+            {!orders.length ? (
+              <div className="empty-state">
+                <ShoppingBag size={30} />
+                <h3>No orders found</h3>
+                <p>Orders will appear here after you place them.</p>
+                <button onClick={() => setCurrentView('shop')}>Start shopping</button>
+              </div>
+            ) : (
+              <div className="orders-list">
+                {orders.map(order => (
+                  <article className="order-list-card" key={order.id}>
+                    <div>
+                      <small>ORDER #{order.id}</small>
+                      <h3>{money(order.total)}</h3>
+                      <p>{new Date(order.orderDate).toLocaleString('en-IN')}</p>
+                      <span className="order-status">{order.status}</span>
+                    </div>
+                    <div>
+                      <p>{(order.items || []).length} item type(s)</p>
+                      <button className="secondary-action" onClick={() => openTracking(order.id)}>
+                        View tracking <ArrowRight size={15} />
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+            <button className="secondary-action back-to-shop" onClick={() => setCurrentView('shop')}>Back to shopping</button>
+          </section>
+        ) : currentView === 'tracking' && selectedOrder ? (
+          <section className="order-page container">
+            <div className="order-page-heading">
+              <span className="eyebrow">ORDER TRACKING</span>
+              <h1>Track order #{selectedOrder.id}</h1>
+              <p>Current status: <strong>{selectedOrder.status}</strong></p>
+            </div>
+
+            {orderError && <div className="order-message">{orderError}</div>}
+            <div className="order-panel">
+              <div className="tracking-timeline">
+                {['PLACED', 'CONFIRMED', 'PACKED', 'SHIPPED', 'DELIVERED'].map((stage, index) => {
+                  const event = (selectedOrder.trackingHistory || []).find(item => item.status === stage)
+                  const completed = Boolean(event)
+                  return (
+                    <div className={`tracking-step ${completed ? 'completed' : ''}`} key={stage}>
+                      <span className="tracking-marker">{completed ? <Check size={15} /> : index + 1}</span>
+                      <div>
+                        <b>{stage}</b>
+                        <p>{event ? event.message : 'Not reached yet'}</p>
+                        {event && <small>{new Date(event.timestamp).toLocaleString('en-IN')}</small>}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="order-actions">
+                {selectedOrder.status !== 'DELIVERED' && (
+                  <button className="checkout-button" onClick={advanceTracking} disabled={orderLoading}>
+                    {orderLoading ? 'Updating...' : 'Advance demo tracking'} <ArrowRight size={17} />
+                  </button>
+                )}
+                <button className="secondary-action" onClick={openOrders}>Back to my orders</button>
+                <button className="secondary-action" onClick={() => setCurrentView('shop')}>Continue shopping</button>
+              </div>
+              <p className="demo-disclaimer">Tracking stages are manually advanced for this academic demonstration. They are not live courier updates.</p>
+            </div>
+          </section>
+        ) : (
+          <section className="order-page container">
+            <div className="empty-state">
+              <h3>Order not selected</h3>
+              <button onClick={openOrders}>Open my orders</button>
+            </div>
+          </section>
+        )}
       </main>
 
+      {/* Footer */}
       <footer className="footer">
         <div className="container footer-inner">
           <a className="logo footer-logo" href="#top">
@@ -615,6 +948,7 @@ export default function App() {
         </div>
       </footer>
 
+      {/* Notification */}
       {notice && (
         <div className="toast">
           <Check size={16} />
@@ -622,6 +956,7 @@ export default function App() {
         </div>
       )}
 
+      {/* Shopping cart drawer */}
       {cartOpen && (
         <div
           className="drawer-backdrop"
@@ -649,13 +984,6 @@ export default function App() {
                 <X />
               </button>
             </div>
-
-            {orderPlaced && (
-              <div className="order-message">
-                <Check size={18} />
-                Demo order placed successfully. No payment was processed.
-              </div>
-            )}
 
             {cartError && (
               <div className="order-message">
@@ -718,27 +1046,65 @@ export default function App() {
                 </div>
 
                 <div className="cart-summary">
-                  <div>
+                  <h3>Delivery details</h3>
+
+                  <label className="checkout-field">
+                    <span>Customer name</span>
+                    <input
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={customerName}
+                      onChange={e => setCustomerName(e.target.value)}
+                    />
+                  </label>
+
+                  <label className="checkout-field">
+                    <span>Phone number</span>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={10}
+                      placeholder="10-digit mobile number"
+                      value={phone}
+                      onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    />
+                  </label>
+
+                  <label className="checkout-field">
+                    <span>Delivery address</span>
+                    <textarea
+                      rows={3}
+                      placeholder="House number, street, area, city and PIN code"
+                      value={deliveryAddress}
+                      onChange={e => setDeliveryAddress(e.target.value)}
+                    />
+                  </label>
+
+                  {orderError && <div className="order-message">{orderError}</div>}
+
+                  <div className="summary-line">
                     <span>Subtotal</span>
                     <b>{money(subtotal)}</b>
                   </div>
-
-                  <small>
-                    Shipping and taxes are not calculated in this demo.
-                  </small>
+                  <div className="summary-line">
+                    <span>Delivery charge</span>
+                    <b>{deliveryCharge === 0 ? 'FREE' : money(deliveryCharge)}</b>
+                  </div>
+                  <div className="summary-line summary-total">
+                    <strong>Final total</strong>
+                    <strong>{money(total)}</strong>
+                  </div>
 
                   <button
                     className="checkout-button"
                     onClick={checkout}
-                    disabled={cartBusy}
+                    disabled={cartBusy || orderLoading}
                   >
-                    {cartBusy ? 'Please wait...' : 'Place demo order'}
+                    {orderLoading ? 'Placing order...' : 'Place Order'}
                     <ArrowRight size={17} />
                   </button>
 
-                  <p>
-                    Demonstration only — no real payment or shipment.
-                  </p>
+                  <p>Demo checkout — no real payment or courier service.</p>
                 </div>
               </>
             ) : !cartLoading ? (
@@ -748,6 +1114,7 @@ export default function App() {
                 <p>
                   Explore the collection and add something you like.
                 </p>
+
                 <button onClick={() => setCartOpen(false)}>
                   Continue shopping
                 </button>
